@@ -9,7 +9,7 @@ package main
 
 import (
    "fmt"
-   "github.com/Barsenick/calc"
+   "github.com/Barsenick/calculator"
 )
 
 func main() {
