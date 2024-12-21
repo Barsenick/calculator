@@ -41,7 +41,6 @@ func CalcHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	err1 := json.NewDecoder(r.Body).Decode(&request)
 	if err1 != nil {
-		log.Println(request)
 		log.Printf("Invalid request body from %s: %s\n", clientIP, request.Expression)
 		http.Error(w, "Invalid request body: "+request.Expression, http.StatusBadRequest)
 		return
