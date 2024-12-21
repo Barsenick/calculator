@@ -2,7 +2,10 @@
 This server is a simple calculator that can evaluate mathematical expressions. It supports basic arithmetic operations (+, -, *, /, ^), decimal points and handles parentheses.
 
 # Usage
-This server has 1 endpoint, ```/api/v1/calculate```. It gets the expression from POST requests, containing the expression in JSON.
+You must have Golang installed.
+Download the repository, go to the ```./cmd``` folder and start the server by running ```go run main.go```
+This server has 1 endpoint, ```/api/v1/calculate```. It gets the expression from POST requests, containing the expression in JSON and returns the result or error in JSON.
+To send requests, open PowerShell and run the command:
 ``` powershell
  Invoke-RestMethod -Method Post -Uri http://localhost:8080/api/v1/calculate -ContentType 'application/json' -Body '{"expression": "5*(22.5+2.5")-2^3}'
 ```
