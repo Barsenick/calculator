@@ -28,7 +28,7 @@ func Calc(expression string) (float64, error) {
 	if err != nil {
 		log.Printf("calculation resulted in error: %v\n", err)
 	} else {
-		log.Println("calculation successful")
+		log.Println("calculation successful:", res)
 	}
 	return res, err
 }
@@ -113,12 +113,17 @@ func calc(expression string) (float64, error) {
 			openParenthesises++
 		} else if r == ')' {
 			openParenthesises--
+			if openParenthesises < 0 {
+				return result, Err422 //ErrUnclosedParenthesises
+			}
 			k := stack_len
 			for operationsStack[k-1] != '(' {
 				k--
 				out_arr = append(out_arr, operationsStack[k])
 				operationsStack = slices.Delete(operationsStack, k, k+1)
 			}
+			k--
+			operationsStack = slices.Delete(operationsStack, k, k+1)
 		}
 
 		// пропускаем операторы и скобки для преобразования следующих чисел
