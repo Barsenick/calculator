@@ -12,7 +12,7 @@ To send requests, open PowerShell and run the command:
 Returns: ```{"result":"117"}```.
 
 ## Error 422
-If the expression is not valid, the calculator will return the error 422.
+If the expression is not valid, the server will return error 422.
 
 ``` powershell
  Invoke-RestMethod -Method Post -Uri http://localhost:8080/api/v1/calculate -ContentType 'application/json' -Body '{"expression": "2+++2"}'
@@ -20,7 +20,7 @@ If the expression is not valid, the calculator will return the error 422.
 Returns: ```{"error":"invalid expression"}```.
 
 ## Error 500
-If an internal error occurs during the calculation, the calculator will return the error 500.
+If an internal error occurs during the calculation, the server will return error 500.
 
 ``` powershell
  Invoke-RestMethod -Method Post -Uri http://localhost:8080/api/v1/calculate -ContentType 'application/json' -Body '{"expression": "1+9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"}'
