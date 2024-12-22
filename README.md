@@ -1,5 +1,5 @@
 # Go Calculator Server
-This server is a simple calculator that can evaluate mathematical expressions. It supports basic arithmetic operations (+, -, *, /, ^), decimal points and handles parentheses.
+This server is a simple calculator that can evaluate mathematical expressions. It supports basic arithmetic operations (+, -, *, /, ^), decimal points and handles parenthesises.
 
 # Usage
 You must have Golang installed.
