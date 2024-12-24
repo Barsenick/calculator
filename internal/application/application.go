@@ -55,7 +55,12 @@ func CalcHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Failed to marshal response", http.StatusInternalServerError)
 			return
 		}
-		http.Error(w, string(response), http.StatusUnprocessableEntity)
+		if err2 == calc.Err422 {
+			http.Error(w, string(response), http.StatusUnprocessableEntity)
+		} else {
+			http.Error(w, string(response), http.StatusInternalServerError)
+		}
+
 	} else {
 		response, err3 := json.Marshal(ResponseSuccess{Result: fmt.Sprintf("%v", result)})
 		if err3 != nil {
