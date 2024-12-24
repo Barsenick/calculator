@@ -26,6 +26,16 @@ type Response struct {
 
 func TestCalc(t *testing.T) {
 	tests := []Test{
+		{"Simple One Number 1",
+			"5",
+			5,
+			false,
+			200},
+		{"Simple One Number 2",
+			"97525673.85739572",
+			97525673.85739572,
+			false,
+			200},
 		{"Simple Addition",
 			"5+3",
 			8,

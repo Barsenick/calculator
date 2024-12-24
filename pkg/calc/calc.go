@@ -249,5 +249,9 @@ func calc(expression string) (float64, error) {
 		}
 	}
 
+	if len(right) == 1 {
+		result = right[0].(float64)
+	}
+
 	return result, nil
 }
