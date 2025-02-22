@@ -31,7 +31,7 @@ go run main.go
 # Usage
 To send requests, open PowerShell and run the command:
 ``` powershell
- Invoke-RestMethod -Method Post -Uri http://localhost:8080/api/v1/calculate -ContentType 'application/json' -Body '{"expression": "5*(22.5+2.5")-2^3}'
+ Invoke-RestMethod -Method Post -Uri http://localhost:8080/api/v1/calculate -ContentType 'application/json' -Body '{"expression": "5*(22.5+2.5")-2^3"}'
 ```
 Returns: ```{"result":"117"}```.
 
