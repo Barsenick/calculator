@@ -3,11 +3,22 @@ package application
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
+	"io"
 	"log"
 	"net/http"
+	"strconv"
 
-	calc "github.com/Barsenick/calculator/pkg/calc"
+	"github.com/Barsenick/calculator/pkg/calc"
 )
+
+type Request struct {
+	Expression string `json:"expression"`
+}
+
+type Response struct {
+	ID string `json:"id"`
+}
 
 type Application struct {
 }
@@ -16,93 +27,222 @@ func New() *Application {
 	return &Application{}
 }
 
-type Request struct {
-	Expression string `json:"expression"`
+func enableCORS(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 }
 
-type ResponseSuccess struct {
-	Result string `json:"result"`
-}
-
-type ResponseError struct {
-	Error string `json:"error"`
-}
-
-func CalcHandler(w http.ResponseWriter, r *http.Request) {
-	request := new(Request)
-
-	clientIP := r.RemoteAddr
-	xForwardedFor := r.Header.Get("X-Forwarded-For")
-
-	if xForwardedFor != "" {
-		clientIP = xForwardedFor
-	}
-
-	defer r.Body.Close()
-	err1 := json.NewDecoder(r.Body).Decode(&request)
+func TasksHandler(w http.ResponseWriter, r *http.Request) {
+	tr := calc.TaskResult{}
+	err1 := json.NewDecoder(r.Body).Decode(&tr)
 	if err1 != nil {
-		log.Printf("Invalid request body from %s: %s\n", clientIP, request.Expression)
-		http.Error(w, "Invalid request body: "+request.Expression, http.StatusBadRequest)
+		calc.Tasks.M.Lock()
+		if len(calc.Tasks.Tasks) == len(calc.TaskResults.TaskResults) {
+			fmt.Fprint(w, "{}")
+		} else {
+			task := calc.Tasks.Tasks[len(calc.Tasks.Tasks)-1]
+			js, err := json.Marshal(task)
+			if err != nil {
+				http.Error(w, err.Error(), 500)
+			}
+			calc.TaskResults.M.Lock()
+			calc.TaskResults.TaskResults = append(calc.TaskResults.TaskResults, calc.TaskResult{TaskID: task.TaskID, Result: 0, Error: ""})
+			calc.TaskResults.M.Unlock()
+			fmt.Fprintf(w, "%v", string(js))
+		}
+		calc.Tasks.M.Unlock()
 		return
 	}
 
-	log.Printf("Request from %s: %s\n", clientIP, request.Expression)
+	calc.TaskResults.M.Lock()
+	calc.TaskResults.TaskResults[tr.TaskID].Result = tr.Result
+	calc.TaskResults.TaskResults[tr.TaskID].Error = tr.Error
+	calc.TaskResults.M.Unlock()
+	calc.Wg.Done()
 
-	result, err2 := calc.Calc(request.Expression)
+}
+
+func ApiCalcHandler(w http.ResponseWriter, r *http.Request) {
+	enableCORS(&w)
+
+	if r.Method == http.MethodOptions {
+		return
+	}
+
+	ClientRequest := new(Request)
+
+	clientIP := r.RemoteAddr
+	//xForwardedFor := r.Header.Get("X-Forwarded-For")
+
+	//if xForwardedFor != "" {
+	//	clientIP = xForwardedFor
+	//}
+
+	defer r.Body.Close()
+	bodyBytes, err1 := io.ReadAll(r.Body)
+	if err1 != nil {
+		log.Printf("Error reading request body from %s: %s\n", clientIP, err1.Error())
+		http.Error(w, "Error reading request body", http.StatusInternalServerError)
+		return
+	}
+
+	err2 := json.Unmarshal(bodyBytes, &ClientRequest)
 	if err2 != nil {
-		response, err3 := json.Marshal(ResponseError{Error: fmt.Sprintf("%v", err2)})
-		if err3 != nil {
-			http.Error(w, "Failed to marshal response", http.StatusInternalServerError)
-			return
-		}
-		if err2 == calc.Err422 {
-			http.Error(w, string(response), http.StatusUnprocessableEntity)
-		} else {
-			http.Error(w, string(response), http.StatusInternalServerError)
-		}
+		log.Printf("Invalid ClientRequest body from %s: %s\n", clientIP, string(bodyBytes))
+		http.Error(w, "Invalid ClientRequest body: "+ClientRequest.Expression, http.StatusBadRequest)
+		return
+	}
 
-	} else {
-		response, err3 := json.Marshal(ResponseSuccess{Result: fmt.Sprintf("%v", result)})
-		if err3 != nil {
-			http.Error(w, "Failed to marshal response", http.StatusInternalServerError)
-			return
+	log.Printf("Request from %s: %s\n", clientIP, ClientRequest.Expression)
+
+	calc.Exprs.M.Lock()
+	id := len(calc.Exprs.Expressions)
+	jsonid, err3 := json.Marshal(calc.ID{ID: id})
+	if err3 != nil {
+		http.Error(w, err3.Error(), http.StatusInternalServerError)
+		return
+	}
+	calc.Exprs.M.Unlock()
+
+	_, errwr := fmt.Fprint(w, string(jsonid))
+	if errwr != nil {
+		http.Error(w, errwr.Error(), http.StatusInternalServerError)
+	}
+
+	go func() {
+		calc.Exprs.M.Lock()
+		calc.Exprs.Expressions = append(calc.Exprs.Expressions, calc.Expression{ID: id, Status: 201, Result: "pending"})
+		calc.Exprs.M.Unlock()
+
+		res, errCalc := calc.Calc(ClientRequest.Expression)
+		calc.Exprs.M.Lock()
+		if errCalc != nil {
+			if errCalc == calc.Err500 {
+				calc.Exprs.Expressions[id].Status = 500
+				calc.Exprs.Expressions[id].Result = errCalc.Error()
+			} else {
+				calc.Exprs.Expressions[id].Status = 422
+				calc.Exprs.Expressions[id].Result = calc.Err422.Error()
+			}
+		} else {
+			calc.Exprs.Expressions[id].Status = 200
+			calc.Exprs.Expressions[id].Result = fmt.Sprintf("%f", res)
 		}
-		fmt.Fprint(w, string(response))
+		calc.Exprs.M.Unlock()
+	}()
+}
+
+func ApiExpressionsHandler(w http.ResponseWriter, r *http.Request) {
+	enableCORS(&w)
+
+	if r.Method == http.MethodOptions {
+		return
+	}
+
+	idstr := r.URL.Query().Get("id")
+	if idstr != "" {
+		id, err1 := strconv.Atoi(idstr)
+		if err1 != nil {
+			http.Error(w, err1.Error(), 500)
+		} else {
+			calc.Exprs.M.Lock()
+			if id >= len(calc.Exprs.Expressions) || id < 0 {
+				http.Error(w, http.StatusText(404), 404)
+			} else {
+				expr := calc.Exprs.Expressions[id]
+				json, err2 := json.Marshal(expr)
+				if err2 != nil {
+					http.Error(w, err2.Error(), 500)
+				} else {
+					fmt.Fprintf(w, "%v", string(json))
+				}
+			}
+			calc.Exprs.M.Unlock()
+		}
+	} else {
+		calc.Exprs.M.Lock()
+		json, err := json.Marshal(calc.Exprs)
+		calc.Exprs.M.Unlock()
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+		} else {
+			fmt.Fprintf(w, "%v", string(json))
+		}
 	}
 }
 
-// Функция запуска приложения
-// тут будем читать введенную строку и после нажатия ENTER писать результат работы программы на экране
-// если пользователь ввел exit - то останаваливаем приложение
-// func (a *Application) Run() error {
-// 	for {
-// 		// читаем выражение для вычисления из командной строки
-// 		log.Println("input expression")
-// 		reader := bufio.NewReader(os.Stdin)
-// 		text, err := reader.ReadString('\n')
-// 		if err != nil {
-// 			log.Println("failed to read expression from console")
-// 		}
-// 		// убираем пробелы, чтобы оставить только вычислемое выражение
-// 		text = strings.TrimSpace(text)
-// 		// выходим, если ввели команду "exit"
-// 		if text == "exit" {
-// 			log.Println("aplication was successfully closed")
-// 			return nil
-// 		}
-// 		//вычисляем выражение
-// 		result, err := calc.Calc(text)
-// 		if err != nil {
-// 			log.Println(text, " calculation failed with error: ", err)
-// 		} else {
-// 			log.Println(text, "=", result)
-// 		}
-// 	}
-// }
+func CalcPageHandler(w http.ResponseWriter, r *http.Request) {
+	// Render the calculate.html template
+	tmpl, err := template.ParseFiles("../html_templates/html/calculate.html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.Execute(w, nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func ExpressionsPageHandler(w http.ResponseWriter, r *http.Request) {
+	enableCORS(&w)
+
+	if r.Method == http.MethodOptions {
+		return
+	}
+
+	tmpl, err := template.ParseFiles("../html_templates/html/expressions.html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.Execute(w, nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func ExpressionPageHandler(w http.ResponseWriter, r *http.Request) {
+	enableCORS(&w)
+
+	tmpl, err := template.ParseFiles("../html_templates/html/expression.html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.Execute(w, nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
 
 func (a *Application) RunServer() error {
-	http.HandleFunc("/api/v1/calculate", CalcHandler)
+	err1 := startAgents()
+	if err1 != nil {
+		return err1
+	}
 
-	log.Println("Starting server on :8080")
-	return http.ListenAndServe(":8080", nil)
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/internal/task", TasksHandler)
+
+	mux.HandleFunc("/api/v1/calculate", ApiCalcHandler)
+	mux.HandleFunc("/api/v1/expressions", ApiExpressionsHandler)
+
+	mux.HandleFunc("/calculate", CalcPageHandler)
+	mux.HandleFunc("/expressions", ExpressionsPageHandler)
+	mux.HandleFunc("/expression", ExpressionPageHandler)
+
+	mux.Handle("/css/", http.StripPrefix("/css", http.FileServer(http.Dir("../html_templates/css"))))
+	mux.Handle("/js/", http.StripPrefix("/js", http.FileServer(http.Dir("../html_templates/js"))))
+	mux.Handle("/icons/", http.StripPrefix("/icons", http.FileServer(http.Dir("../html_templates/icons"))))
+
+	log.Println("Starting server on", calc.Port)
+	err2 := http.ListenAndServe(calc.Port, mux)
+
+	return err2
 }

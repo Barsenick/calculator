@@ -2,12 +2,62 @@ package calc
 
 import (
 	"errors"
-	"log"
-	"math"
+	"os"
 	"slices"
 	"strconv"
+	"sync"
+	"time"
 	"unicode"
 )
+
+const (
+	Port = ":8080"
+)
+
+var Wg sync.WaitGroup
+
+type ID struct {
+	ID int `json:"id"`
+}
+
+type Expression struct {
+	ID     int    `json:"id"`
+	Status int    `json:"status"`
+	Result string `json:"result"`
+}
+
+type Task struct {
+	TaskID        int     `json:"id"`
+	Arg1          float64 `json:"arg1"`
+	Arg2          float64 `json:"arg2"`
+	Operation     rune    `json:"operation"`
+	OperationTime int     `json:"operation_time"`
+}
+
+type TaskResult struct {
+	TaskID int     `json:"id"`
+	Result float64 `json:"result"`
+	Error  string  `json:"error,omitempty"`
+}
+
+type Expressions struct {
+	Expressions []Expression `json:"expressions"`
+	M           sync.Mutex   `json:"-"`
+}
+
+type TasksStruct struct {
+	Tasks []Task
+	M     sync.Mutex
+}
+
+type TaskResultsStruct struct {
+	TaskResults []TaskResult
+	M           sync.Mutex
+}
+
+var Exprs = Expressions{}
+var Tasks = TasksStruct{}
+var TaskResults = TaskResultsStruct{}
 
 var (
 	// Errors
@@ -19,21 +69,12 @@ var (
 	// ErrUnclosedParenthesises              = errors.New("unclosed parenthesises")
 	// ErrOperatorsCount                     = errors.New("operators count must be less than numbers count")
 
-	Err422 = errors.New("expression is not valid")
-	Err500 = errors.New("internal server error")
+	Err422     = errors.New("expression is not valid")
+	Err500     = errors.New("internal server error")
+	ErrTimeout = errors.New("timeouted")
 )
 
 func Calc(expression string) (float64, error) {
-	res, err := calc(expression)
-	if err != nil {
-		log.Printf("calculation resulted in error: %v\n", err)
-	} else {
-		log.Println("calculation successful:", res)
-	}
-	return res, err
-}
-
-func calc(expression string) (float64, error) {
 	if expression == "" {
 		return 0, Err422 //ErrEmptyExpression
 	}
@@ -178,34 +219,62 @@ func calc(expression string) (float64, error) {
 					right = append(right, res)
 					// если же последний элемент это знак - считаем последний элемент, который является числом
 				} else {
-					if lastElem == '+' {
-						result = right[len(right)-2].(float64) + res
-						right = slices.Delete(right, len(right)-2, len(right))
-						right = append(right, result)
-
-					} else if lastElem == '-' {
-						result = right[len(right)-2].(float64) - res
-						right = slices.Delete(right, len(right)-2, len(right))
-						right = append(right, result)
-
-					} else if lastElem == '*' {
-						result = right[len(right)-2].(float64) * res
-						right = slices.Delete(right, len(right)-2, len(right))
-						right = append(right, result)
-
-					} else if lastElem == '/' {
-						if res == 0 {
-							return 0, Err422 //ErrDivisionByZero
+					var timeout_ms int
+					var err2 error
+					var err3 error
+					switch lastElem {
+					case '+':
+						val := os.Getenv("TIME_ADDITION_MS")
+						if val == "" {
+							val = "50"
 						}
-						result = right[len(right)-2].(float64) / res
-						right = slices.Delete(right, len(right)-2, len(right))
-						right = append(right, result)
-
-					} else if lastElem == '^' {
-						result = math.Pow(right[len(right)-2].(float64), res)
-						right = slices.Delete(right, len(right)-2, len(right))
-						right = append(right, result)
+						timeout_ms, err2 = strconv.Atoi(val)
+						if err2 != nil {
+							return 0, err2
+						}
+					case '-':
+						val := os.Getenv("TIME_SUBTRACTION_MS")
+						if val == "" {
+							val = "50"
+						}
+						timeout_ms, err2 = strconv.Atoi(val)
+						if err2 != nil {
+							return 0, err2
+						}
+					case '*':
+						val := os.Getenv("TIME_MULTIPLICATIONS_MS ")
+						if val == "" {
+							val = "50"
+						}
+						timeout_ms, err2 = strconv.Atoi(val)
+						if err2 != nil {
+							return 0, err2
+						}
+					case '/':
+						val := os.Getenv("TIME_DIVISIONS_MS ")
+						if val == "" {
+							val = "50"
+						}
+						timeout_ms, err2 = strconv.Atoi(val)
+						if err2 != nil {
+							return 0, err2
+						}
+					case '^':
+						val := os.Getenv("TIME_POW_MS ")
+						if val == "" {
+							val = "50"
+						}
+						timeout_ms, err2 = strconv.Atoi(val)
+						if err2 != nil {
+							return 0, err2
+						}
 					}
+					result, err3 = SolveOperation(lastElem.(rune), right[len(right)-2].(float64), res, time.Duration(timeout_ms)*time.Millisecond)
+					if err3 != nil {
+						return 0, err3
+					}
+					right = slices.Delete(right, len(right)-2, len(right))
+					right = append(right, result)
 				}
 			} else {
 				//иначе добавляем число либо знак.
@@ -215,34 +284,62 @@ func calc(expression string) (float64, error) {
 		}
 		// если есть 2 или более числа, то считаем 2 последних элемента. результат сохраняем в предпоследний элемент
 		if len(right) >= 2 {
-			if rr == '+' {
-				result = right[len(right)-2].(float64) + right[len(right)-1].(float64)
-				right = slices.Delete(right, len(right)-2, len(right))
-				right = append(right, result)
-
-			} else if rr == '-' {
-				result = right[len(right)-2].(float64) - right[len(right)-1].(float64)
-				right = slices.Delete(right, len(right)-2, len(right))
-				right = append(right, result)
-
-			} else if rr == '*' {
-				result = right[len(right)-2].(float64) * right[len(right)-1].(float64)
-				right = slices.Delete(right, len(right)-2, len(right))
-				right = append(right, result)
-
-			} else if rr == '/' {
-				if right[len(right)-1].(float64) == 0 {
-					return 0, Err422 //ErrDivisionByZero
+			var timeout_ms int
+			var err2 error
+			var err3 error
+			switch rr {
+			case '+':
+				val := os.Getenv("TIME_ADDITION_MS")
+				if val == "" {
+					val = "50"
 				}
-				result = right[len(right)-2].(float64) / right[len(right)-1].(float64)
-				right = slices.Delete(right, len(right)-2, len(right))
-				right = append(right, result)
-
-			} else if rr == '^' {
-				result = math.Pow(right[len(right)-2].(float64), right[len(right)-1].(float64))
-				right = slices.Delete(right, len(right)-2, len(right))
-				right = append(right, result)
+				timeout_ms, err2 = strconv.Atoi(val)
+				if err2 != nil {
+					return 0, err2
+				}
+			case '-':
+				val := os.Getenv("TIME_SUBTRACTION_MS")
+				if val == "" {
+					val = "50"
+				}
+				timeout_ms, err2 = strconv.Atoi(val)
+				if err2 != nil {
+					return 0, err2
+				}
+			case '*':
+				val := os.Getenv("TIME_MULTIPLICATIONS_MS")
+				if val == "" {
+					val = "50"
+				}
+				timeout_ms, err2 = strconv.Atoi(val)
+				if err2 != nil {
+					return 0, err2
+				}
+			case '/':
+				val := os.Getenv("TIME_DIVISIONS_MS")
+				if val == "" {
+					val = "50"
+				}
+				timeout_ms, err2 = strconv.Atoi(val)
+				if err2 != nil {
+					return 0, err2
+				}
+			case '^':
+				val := os.Getenv("TIME_POW_MS")
+				if val == "" {
+					val = "50"
+				}
+				timeout_ms, err2 = strconv.Atoi(val)
+				if err2 != nil {
+					return 0, err2
+				}
 			}
+			result, err3 = SolveOperation(rr.(rune), right[len(right)-2].(float64), right[len(right)-1].(float64), time.Duration(timeout_ms)*time.Millisecond)
+			if err3 != nil {
+				return 0, err3
+			}
+			right = slices.Delete(right, len(right)-2, len(right))
+			right = append(right, result)
 		} else {
 			// иначе добавляем число
 			right = append(right, rr)
@@ -254,4 +351,21 @@ func calc(expression string) (float64, error) {
 	}
 
 	return result, nil
+}
+
+func SolveOperation(op rune, arg1, arg2 float64, t time.Duration) (float64, error) {
+	Wg.Add(1)
+	Tasks.M.Lock()
+	Tasks.Tasks = append(Tasks.Tasks, Task{len(Tasks.Tasks), arg1, arg2, op, 40})
+	id := len(Tasks.Tasks) - 1
+	Tasks.M.Unlock()
+	Wg.Wait()
+	TaskResults.M.Lock()
+	tr := TaskResults.TaskResults[id]
+	TaskResults.M.Unlock()
+	if tr.Error != "" {
+		return 0, errors.New(tr.Error)
+	} else {
+		return tr.Result, nil
+	}
 }

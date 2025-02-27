@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expressions</title>
+    <link rel="stylesheet" type="text/css" href="/css/styles.css">
+    <link rel="icon" href="/icons/icon.png" type="image/png">
+    <style>
+        #expressions-container {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Expressions</h1>
+        <button onclick="fetchExpressions()">Refresh</button>
+        <div id="expressions-container" class="expressions-container">
+            <div id="expressions"></div>
+        </div>
+        <div id="no-expressions" style="display: none; color: red;">No expressions found</div>
+    </div>
+    <script src="js/expressions.js"></script>
+    <footer>
+        <p>View the project on <a href="https://github.com/Barsenick/calculator" target="_blank">GitHub</a></p>
+    </footer>
+</body>
+</html>

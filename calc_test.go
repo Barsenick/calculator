@@ -9,6 +9,9 @@ import (
 	"net/http"
 	"strconv"
 	"testing"
+	"time"
+
+	"github.com/Barsenick/calculator/pkg/calc"
 )
 
 type Test struct {
@@ -19,9 +22,15 @@ type Test struct {
 	expectedStatusCode int
 }
 
-type Response struct {
-	Result string `json:"result,omitempty"`
-	Error  string `json:"error,omitempty"`
+type CalcResponse struct {
+	ID    int    `json:"id"`
+	Error string `json:"error,omitempty"`
+}
+
+type ExpressionResponse struct {
+	ID     int    `json:"id"`
+	Status int    `json:"status"`
+	Result string `json:"result"`
 }
 
 func TestCalc(t *testing.T) {
@@ -210,11 +219,11 @@ func TestCalc(t *testing.T) {
 			500},
 	}
 
-	url := "http://localhost:8080/api/v1/calculate"
+	t.Log(len(tests))
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			request, err1 := http.NewRequest(http.MethodPost, url, bytes.NewReader([]byte(fmt.Sprintf(`{"expression":"%v"}`, tt.expression))))
+			request, err1 := http.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/calculate", bytes.NewReader([]byte(fmt.Sprintf(`{"expression":"%v"}`, tt.expression))))
 			if err1 != nil {
 				panic(err1)
 			}
@@ -233,26 +242,71 @@ func TestCalc(t *testing.T) {
 				panic(err3)
 			}
 
-			var result Response
-			err4 := json.Unmarshal(responseBytes, &result)
+			var cr CalcResponse
+			err4 := json.Unmarshal(responseBytes, &cr)
 			if err4 != nil {
 				panic(err4)
 			}
 
-			if response.StatusCode != tt.expectedStatusCode {
-				t.Errorf("Handler returned wrong status code: expected %v, got %v", tt.expectedStatusCode, response.StatusCode)
+			id := strconv.Itoa(cr.ID)
+
+			request2, err5 := http.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/expressions?id="+id, nil)
+			if err5 != nil {
+				panic(err5)
 			}
-			if tt.wantError {
-				if result.Result != "" {
-					t.Errorf("Handler returned wrong result: got %v want empty string", result.Result)
-				}
-			} else {
-				result, err := strconv.ParseFloat(result.Result, 64)
-				if err != nil {
-					t.Fatalf("Error parsing result: %v", err)
-				}
-				if math.Abs(result-tt.expected) > 1e-6 {
-					t.Errorf("Handler returned wrong result: got %v want %v", result, tt.expected)
+
+			haventGotResult := true
+			attempts := 0
+
+			for haventGotResult {
+				if attempts >= 10 {
+					t.Fatal("still pending after 10 attempts")
+				} else {
+					time.Sleep(50 * time.Millisecond)
+					response2, err6 := client.Do(request2)
+					if err6 != nil {
+						panic(err6)
+					}
+					defer response2.Body.Close()
+
+					response2Bytes, err7 := io.ReadAll(response2.Body)
+					if err7 != nil {
+						panic(err7)
+					}
+
+					var er ExpressionResponse
+					err8 := json.Unmarshal(response2Bytes, &er)
+					if err8 != nil {
+						panic(err8)
+					}
+
+					if er.Result == "pending" {
+						attempts++
+						continue
+					} else if er.Result == calc.Err422.Error() || er.Result == calc.Err500.Error() {
+						if !tt.wantError {
+							t.Fatalf("unexpected error")
+						}
+						haventGotResult = false
+						break
+					}
+
+					resfloat, errfloat := strconv.ParseFloat(er.Result, 64)
+					if errfloat != nil {
+						panic(errfloat)
+					}
+
+					if math.Abs(resfloat-tt.expected) > 0.0001 {
+						t.Fatalf("expected %v, got %v", tt.expected, resfloat)
+					}
+					if er.Status != tt.expectedStatusCode {
+						t.Fatalf("expected %v, got %v", tt.expectedStatusCode, er.Status)
+					}
+					if tt.wantError && er.Status == 200 {
+						t.Fatalf("expected error, got success")
+					}
+					haventGotResult = false
+					break
 				}
 			}
 		})

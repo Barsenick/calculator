@@ -1,8 +1,15 @@
 package main
 
-import "github.com/Barsenick/calculator/internal/application"
+import (
+	"fmt"
+
+	"github.com/Barsenick/calculator/internal/application"
+)
 
 func main() {
 	app := application.New()
-	app.RunServer()
+	err := app.RunServer()
+	if err != nil {
+		fmt.Println("Error starting server:", err)
+	}
 }
