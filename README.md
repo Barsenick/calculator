@@ -1,10 +1,28 @@
 # Golang Calculator Server
-This server is a simple calculator that can evaluate mathematical expressions. It has 1 endpoint, ```/api/v1/calculate```. It gets the expression from POST requests, containing the expression in JSON and returns the result or error in JSON.
 
-# Features
+This server is a simple calculator that can evaluate mathematical expressions. It provides multiple endpoints for handling calculations, retrieving expressions, and managing tasks. The server interacts with an agent that sends requests to ask for new tasks, solves them, and sends the results back to the server.
+
+![How does this work?](https://github.com/user-attachments/assets/26364cd8-28cd-490a-81aa-87b52968bbb4)
+
+## Features
+
 - Supports basic arithmetic operations (+, -, *, /, ^) and decimal points
-- Handles real numbers and supports parenthesis
+- Handles real numbers and supports parentheses
 - Provides comprehensive error handling
+- Manages tasks and expressions through various endpoints
+
+## Endpoints
+
+### API Endpoints
+
+- **`/api/v1/calculate`**: Accepts POST requests containing an expression in JSON and returns the result or error in JSON.
+- **`/api/v1/expressions`**: Retrieves a list of all expressions evaluated by the server.
+
+### Web Page Endpoints
+
+- **`/calculate`**: Displays the calculator web page where users can input expressions and see results.
+- **`/expressions`**: Displays a list of all expressions evaluated by the server.
+- **`/expression`**: Displays details of a specific expression by ID.
 
 # Setup
 You must have Golang installed.
@@ -29,7 +47,7 @@ go run main.go
 ```
 
 # Usage
-To send requests, open PowerShell and run the command:
+To send requests to the API, open PowerShell and run the command:
 ``` powershell
  Invoke-RestMethod -Method Post -Uri http://localhost:8080/api/v1/calculate -ContentType 'application/json' -Body '{"expression": "5*(22.5+2.5")-2^3"}'
 ```
