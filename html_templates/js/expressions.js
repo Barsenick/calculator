@@ -1,6 +1,6 @@
 function fetchExpressions() {
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "http://localhost:8080/api/v1/expressions", true);
+    xhr.open("GET", window.location.protocol + "//" + window.location.host + "/api/v1/expressions", true);
     xhr.setRequestHeader("Content-Type", "application/json");
 
     xhr.onreadystatechange = function () {

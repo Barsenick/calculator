@@ -35,7 +35,7 @@ input[type="text"] {
 
 button {
     padding: 10px 20px;
-    background-color: #4CAF50; /* Green */
+    background-color: #4CAF50;
     color: #fff;
     border: none;
     border-radius: 4px;
@@ -44,7 +44,7 @@ button {
 }
 
 button:hover {
-    background-color: #45a049; /* Darker Green */
+    background-color: #45a049;
 }
 
 #expression-details {
@@ -60,7 +60,7 @@ button:hover {
 }
 
 .small-text {
-    font-size: 0.9em; /* Ensure this is correctly defined */
+    font-size: 0.9em;
 }
 
 .id-status {
@@ -71,7 +71,7 @@ button:hover {
 
 #expressions-container {
     width: 100%;
-    max-height: 700px; /* Adjust this value as needed */
+    max-height: 700px;
     overflow-y: auto;
     border: 1px solid #ccc;
     border-radius: 4px;

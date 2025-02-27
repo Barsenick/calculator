@@ -7,7 +7,7 @@ function fetchExpression() {
     }
 
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "http://localhost:8080/api/v1/expressions?id=" + expressionId, true);
+    xhr.open("GET", window.location.protocol + "//" + window.location.host + "/api/v1/expressions?id=" + expressionId, true);
     xhr.setRequestHeader("Content-Type", "application/json");
 
     xhr.onreadystatechange = function () {
@@ -95,14 +95,11 @@ function formatResult(result) {
 
 // Fetch expression when the page loads if ID is provided in the URL
 window.onload = function() {
+    document.getElementById("button").style.marginBottom = "0px";
     var urlParams = new URLSearchParams(window.location.search);
     var id = urlParams.get('id');
     if (id) {
         document.getElementById("expressionId").value = id;
         fetchExpression();
     }
-};
-
-window.onload = function() {
-    document.getElementById("button").style.marginBottom = "0px";
 };

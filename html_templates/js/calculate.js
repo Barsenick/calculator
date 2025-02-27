@@ -7,7 +7,7 @@ function calculate() {
     }
 
     var xhr = new XMLHttpRequest();
-    xhr.open("POST", "http://localhost:8080/api/v1/calculate", true);
+    xhr.open("POST", window.location.protocol + "//" + window.location.host + "/api/v1/calculate", true);
     xhr.setRequestHeader("Content-Type", "application/json");
 
     xhr.onreadystatechange = function () {
@@ -30,7 +30,7 @@ function calculate() {
                 // Show the result link
                 var resultLinkDiv = document.getElementById("result-link");
                 var expressionLink = document.getElementById("expression-link");
-                expressionLink.href = "http://localhost:8080/expression?id=" + response.id;
+                expressionLink.href = window.location.protocol + "//" + window.location.host + "/expression?id=" + response.id;
                 expressionLink.textContent = "Check the result here!";
                 resultLinkDiv.style.display = "block";
             } else {
