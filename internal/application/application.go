@@ -73,11 +73,11 @@ func ApiCalcHandler(w http.ResponseWriter, r *http.Request) {
 	ClientRequest := new(Request)
 
 	clientIP := r.RemoteAddr
-	//xForwardedFor := r.Header.Get("X-Forwarded-For")
+	xForwardedFor := r.Header.Get("X-Forwarded-For")
 
-	//if xForwardedFor != "" {
-	//	clientIP = xForwardedFor
-	//}
+	if xForwardedFor != "" {
+		clientIP = xForwardedFor
+	}
 
 	defer r.Body.Close()
 	bodyBytes, err1 := io.ReadAll(r.Body)
@@ -118,13 +118,12 @@ func ApiCalcHandler(w http.ResponseWriter, r *http.Request) {
 		res, errCalc := calc.Calc(ClientRequest.Expression)
 		calc.Exprs.M.Lock()
 		if errCalc != nil {
-			if errCalc == calc.Err500 {
-				calc.Exprs.Expressions[id].Status = 500
-				calc.Exprs.Expressions[id].Result = errCalc.Error()
-			} else {
+			if errCalc == calc.Err422 {
 				calc.Exprs.Expressions[id].Status = 422
-				calc.Exprs.Expressions[id].Result = calc.Err422.Error()
+			} else {
+				calc.Exprs.Expressions[id].Status = 500
 			}
+			calc.Exprs.Expressions[id].Result = errCalc.Error()
 		} else {
 			calc.Exprs.Expressions[id].Status = 200
 			calc.Exprs.Expressions[id].Result = fmt.Sprintf("%f", res)

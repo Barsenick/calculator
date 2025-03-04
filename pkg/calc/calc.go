@@ -99,7 +99,15 @@ func Calc(expression string) (float64, error) {
 	newExpression := ""
 	for _, r := range expression {
 		if r != ' ' {
-			newExpression += string(r)
+			if r == 'x' || r == 'X' {
+				newExpression += "*"
+			} else {
+				if r == ',' {
+					newExpression += "."
+				} else {
+					newExpression += string(r)
+				}
+			}
 		}
 	}
 
@@ -356,7 +364,7 @@ func Calc(expression string) (float64, error) {
 func SolveOperation(op rune, arg1, arg2 float64, t time.Duration) (float64, error) {
 	Wg.Add(1)
 	Tasks.M.Lock()
-	Tasks.Tasks = append(Tasks.Tasks, Task{len(Tasks.Tasks), arg1, arg2, op, 40})
+	Tasks.Tasks = append(Tasks.Tasks, Task{len(Tasks.Tasks), arg1, arg2, op, int(t.Milliseconds())})
 	id := len(Tasks.Tasks) - 1
 	Tasks.M.Unlock()
 	Wg.Wait()

@@ -219,8 +219,7 @@ func TestCalc(t *testing.T) {
 			500},
 	}
 
-	t.Log(len(tests))
-
+	//for range 100 {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			request, err1 := http.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/calculate", bytes.NewReader([]byte(fmt.Sprintf(`{"expression":"%v"}`, tt.expression))))
@@ -312,3 +311,5 @@ func TestCalc(t *testing.T) {
 		})
 	}
 }
+
+//}
