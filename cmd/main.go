@@ -1,15 +1,43 @@
 package main
 
 import (
-	"fmt"
+	"log"
+	"os"
+	"strconv"
 
-	"github.com/Barsenick/calculator/internal/application"
+	agent "github.com/Barsenick/calculator/internal/application/agent"
+	orchestrator "github.com/Barsenick/calculator/internal/application/orchestrator"
 )
 
+func StartAgents() error {
+	comp_power_str := os.Getenv("COMPUTING_POWER")
+	comp_power := 5
+	var err1 error
+	if comp_power_str != "" {
+		comp_power, err1 = strconv.Atoi(comp_power_str)
+		if err1 != nil {
+			return err1
+		}
+	}
+
+	for range comp_power {
+		go agent.StartAgent()
+	}
+
+	return nil
+}
+
 func main() {
-	app := application.New()
+	go func() {
+		err := StartAgents()
+		if err != nil {
+			log.Fatal("Error starting agents:", err)
+		}
+	}()
+
+	app := orchestrator.New()
 	err := app.RunServer()
 	if err != nil {
-		fmt.Println("Error starting server:", err)
+		log.Fatal("Error starting server:", err)
 	}
 }

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator and Expressions</title>
+    <link rel="stylesheet" type="text/css" href="/css/styles.css">
+    <link rel="icon" href="/icon.png" type="image/png">
+    <style>
+        #expressions-container {
+            display: none;
+        }
+        #expression-details {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-wrapper">
+        <div class="container">
+            <h1>Online Golang Calculator</h1>
+            <input type="text" id="expression" placeholder="Enter expression">
+            <button onclick="calculate()">Calculate</button>
+            <div id="result-link" style="display: none;">
+                <a id="expression-link" href="#">Check the result here!</a>
+            </div>
+        </div>
+
+        <div class="container">
+            <h1>Expressions</h1>
+            <button onclick="fetchExpressions()">Refresh</button>
+            <div id="expressions-container" class="expressions-container">
+                <div id="expressions"></div>
+            </div>
+            <div id="no-expressions" style="display: none; color: red;">No expressions found</div>
+        </div>
+
+        <div class="container">
+            <h1>Expression Details</h1>
+            <input type="text" id="expressionId" placeholder="Enter Expression ID">
+            <button onclick="fetchExpression()">Fetch</button>
+            <div id="expression-details"></div>
+        </div>
+    </div>
+
+    <footer>
+        <p>View the project on <a href="https://github.com/yourusername/yourproject" target="_blank">GitHub</a></p>
+    </footer>
+
+    <script src="/js/index.js"></script>
+</body>
+</html>
