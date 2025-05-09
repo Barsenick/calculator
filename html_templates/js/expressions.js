@@ -58,7 +58,7 @@ function displayExpressions(expressions) {
         var statusPara = document.createElement("p");
         statusPara.className = "small-text";
         statusPara.textContent = "Status: " + expression.status;
-        if (expression.status === 200 || expression.status === 201) {
+        if (expression.status === "200" || expression.status === "201") {
             statusPara.style.color = "green";
         } else {
             statusPara.style.color = "red";

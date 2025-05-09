@@ -32,33 +32,36 @@ func SolveOperation(op rune, arg1, arg2 float64) (float64, error) {
 }
 
 func StartAgent() {
-	log.Println("agent started")
-	url := "http://localhost:8080/internal/task"
+	url := "http://localhost" + calc.Port + "/internal/task"
+	log.Println("agent started on " + url)
 
 	for {
 		time.Sleep(10 * time.Millisecond)
 		request, err1 := http.NewRequest(http.MethodGet, url, nil)
 		if err1 != nil {
-			panic(err1)
+			log.Println(err1.Error())
+			continue
 		}
 
 		client := &http.Client{}
 		response, err2 := client.Do(request)
 		if err2 != nil {
-			panic(err2)
+			log.Println(err2.Error())
+			continue
 		}
 
 		if response.StatusCode == 200 {
 			task := calc.Task{}
 			bodyBytes, err := io.ReadAll(response.Body)
 			if err != nil {
-				log.Fatal(err)
+				log.Fatal(err.Error())
 			}
 
 			err3 := json.Unmarshal(bodyBytes, &task)
 			if err3 != nil {
 				response.Body.Close()
-				panic(err3)
+				log.Println(err3.Error())
+				continue
 			}
 			if task.Operation != 0 {
 				calc.Tasks.M.Lock()
@@ -84,12 +87,14 @@ func StartAgent() {
 						js, err5 := json.Marshal(tr)
 						if err5 != nil {
 							response.Body.Close()
-							panic(err5)
+							log.Println(err5.Error())
+							continue
 						}
 						request, err6 := http.NewRequest(http.MethodPost, url, bytes.NewReader(js))
 						if err6 != nil {
 							response.Body.Close()
-							panic(err6)
+							log.Println(err6.Error())
+							continue
 						}
 						client := &http.Client{}
 						client.Do(request)
@@ -98,12 +103,14 @@ func StartAgent() {
 						js, err5 := json.Marshal(tr)
 						if err5 != nil {
 							response.Body.Close()
-							panic(err5)
+							log.Println(err5.Error())
+							continue
 						}
 						request, err6 := http.NewRequest(http.MethodPost, url, bytes.NewReader(js))
 						if err6 != nil {
 							response.Body.Close()
-							panic(err6)
+							log.Println(err6.Error())
+							continue
 						}
 						client := &http.Client{}
 						client.Do(request)

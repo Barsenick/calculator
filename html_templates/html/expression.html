@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expression Details</title>
+    <title>Expression Details | Go Calculator</title>
     <link rel="stylesheet" type="text/css" href="/css/styles.css">
-    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" sizes="64x64" href="/icons/icon-64.png" type="image/png">
+    <link rel="icon" sizes="32x32" href="/icons/icon-32.png" type="image/png">
     <style>
         #expression-details {
             display: none;
@@ -13,15 +14,19 @@
     </style>
 </head>
 <body>
+    <nav class="nav-container"><p class="p-nav"><a href="/calculate">Calculate</a></p><p>|</p><p class="p-nav"><a href="/expressions">Expressions</a></p><p>|</p><p class="p-nav"><a href="/expression">Expression</a></p><p>|</p><p class="p-nav"><a onclick="log_out()" href="#">Log out</a></p></nav>
+
     <div class="container">
         <h1>Expression Details</h1>
         <input type="text" id="expressionId" placeholder="Enter Expression ID">
         <button id = "button" onclick="fetchExpression()">Fetch</button>
         <div id="expression-details"></div>
+        <p class="p-result" style="display: block; color: rgb(85, 85, 85);">Check all your expressions <a href="/expressions" target="_self">here!</a></p>
     </div>
     <script src="/js/expression.js"></script>
     <footer>
         <p>View the project on <a href="https://github.com/Barsenick/calculator" target="_blank">GitHub</a></p>
     </footer>
+    <script src="/js/all.js"></script>
 </body>
 </html>

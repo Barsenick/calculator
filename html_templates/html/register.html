@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | Go Calculator</title>
+    <link rel="stylesheet" type="text/css" href="/css/styles.css">
+    <link rel="icon" sizes="64x64" href="/icons/icon-64.png" type="image/png">
+    <link rel="icon" sizes="32x32" href="/icons/icon-32.png" type="image/png">
+</head>
+<body>
+    <div class="centered-container">
+        <div class="login-container">
+            <h1>Register</h1>
+            <input type="text" id="username" placeholder="Enter username">
+            <input type="password" id="password" placeholder="Enter password">
+            <button onclick="register()" class="button-bottom">Register</button>
+            <p id="register-result" class="p-result">Loading...</p>
+            <p class="p-result" style="display: block; color: rgb(85, 85, 85);">Already have an account? Login <a href="/login" target="_self">here!</a></p>
+        </div>
+    </div>
+
+    <footer>
+        <p>View the project on <a href="https://github.com/Barsenick/calculator" target="_blank">GitHub</a></p>
+    </footer>
+
+    <script src="/js/register.js"></script>
+    <script src="/js/all.js"></script>
+</body>
+</html>

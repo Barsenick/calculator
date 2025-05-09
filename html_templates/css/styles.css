@@ -17,6 +17,10 @@ body {
     margin-top: 20px;
 }
 
+.centered-container {
+    width: 50%;
+}
+
 .container {
     background-color: #fff;
     padding: 20px;
@@ -31,6 +35,20 @@ body {
     margin: 0 10px; /* Add space between containers */
 }
 
+.login-container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 10px; /* Add space between containers */
+    min-width: 35%;
+    justify-self: center;
+}
+
 h1 {
     margin-bottom: 20px;
 }
@@ -43,6 +61,15 @@ input[type="text"] {
     border-radius: 4px;
 }
 
+input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+
 button {
     padding: 10px 20px;
     background-color: #4CAF50;
@@ -51,6 +78,15 @@ button {
     border-radius: 4px;
     cursor: pointer;
     margin-bottom: 20px;
+}
+
+.button-bottom {
+    margin-bottom: 0px;
+}
+
+.p-result {
+    display: none;
+    margin-block-end: 0px;
 }
 
 button:hover {
@@ -108,6 +144,40 @@ footer {
     bottom: 0;
 }
 
+header {
+    margin-bottom: auto;
+    padding: 10px;
+    text-align: center;
+    font-size: 0.9em;
+    color: #555;
+    width: 100%;
+    position: fixed;
+    top: 0;
+}
+
+nav {
+    margin-bottom: auto;
+    padding: 10px;
+    text-align: center;
+    font-size: 0.9em;
+    color: #555;
+    width: 100%;
+    position: fixed;
+    top: 0;
+}
+
+.nav-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  }
+
 .expression p {
     margin: 5px 0;
+}
+
+.p-nav {
+    margin: 5px 10px;
+    align-self: center;
 }

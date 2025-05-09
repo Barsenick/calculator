@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculator and Expressions</title>
+    <title>Calculator and Expressions | Go Calculator</title>
     <link rel="stylesheet" type="text/css" href="/css/styles.css">
-    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" sizes="64x64" href="/icons/icon-64.png" type="image/png">
+    <link rel="icon" sizes="32x32" href="/icons/icon-32.png" type="image/png">
     <style>
         #expressions-container {
             display: none;
@@ -16,6 +17,8 @@
     </style>
 </head>
 <body>
+    <nav class="nav-container"><p class="p-nav"><a href="/calculate">Calculate</a></p><p>|</p><p class="p-nav"><a href="/expressions">Expressions</a></p><p>|</p><p class="p-nav"><a href="/expression">Expression</a></p><p>|</p><p class="p-nav"><a onclick="log_out()" href="#">Log out</a></p></nav>
+
     <div class="container-wrapper">
         <div class="container">
             <h1>Online Golang Calculator</h1>
@@ -44,9 +47,10 @@
     </div>
 
     <footer>
-        <p>View the project on <a href="https://github.com/yourusername/yourproject" target="_blank">GitHub</a></p>
+        <p>View the project on <a href="https://github.com/Barsenick/calculator" target="_blank">GitHub</a></p>
     </footer>
 
     <script src="/js/index.js"></script>
+    <script src="/js/all.js"></script>
 </body>
 </html>
