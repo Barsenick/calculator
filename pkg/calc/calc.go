@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	Port = ":8070"
+	Port = ":8080"
 )
 
 var Wg sync.WaitGroup
