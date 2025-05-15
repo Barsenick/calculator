@@ -43,13 +43,18 @@ You must have Golang installed.
 git clone https://github.com/Barsenick/calculator.git
 ```
 
-2. **Run the orchestrator:**
+2. **Navigate to the project folder:**
+```
+cd calculator
+```
+
+3. **Run the orchestrator:**
 Start the calculator server by executing:
 ```
 go run cmd/orchestrator/main.go
 ```
 
-3. **Run the agents:**
+4. **Run the agents:**
 Start the agents by executing:
 ```
 go run cmd/agents/main.go
