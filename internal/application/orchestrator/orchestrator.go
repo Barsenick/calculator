@@ -28,7 +28,7 @@ var (
 	ErrInvalidToken           = errors.New("token is invalid")
 )
 
-const hmacSampleSecret = "calculator_service_signature2"
+const hmacSampleSecret = "calculator_service_signature3"
 
 type Request struct {
 	Expression string `json:"expression"`
@@ -563,7 +563,7 @@ func ApiExpressionsHandler(w http.ResponseWriter, r *http.Request) {
 
 func CalcPageHandler(w http.ResponseWriter, r *http.Request) {
 	// Render the calculate.html template
-	tmpl, err := template.ParseFiles("../html_templates/html/calculate.html")
+	tmpl, err := template.ParseFiles("../../html_templates/html/calculate.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -580,7 +580,7 @@ func ExpressionsPageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl, err := template.ParseFiles("../html_templates/html/expressions.html")
+	tmpl, err := template.ParseFiles("../../html_templates/html/expressions.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -593,7 +593,7 @@ func ExpressionsPageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ExpressionPageHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles("../html_templates/html/expression.html")
+	tmpl, err := template.ParseFiles("../../html_templates/html/expression.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -690,7 +690,7 @@ func ApiRegistrationHandler(w http.ResponseWriter, r *http.Request) {
 func RegistrationPageHandler(w http.ResponseWriter, r *http.Request) {
 	_, err := getToken(r, &jwt.MapClaims{})
 	if err == ErrNoToken || err == ErrInvalidToken {
-		tmpl, err := template.ParseFiles("../html_templates/html/register.html")
+		tmpl, err := template.ParseFiles("../../html_templates/html/register.html")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -711,7 +711,7 @@ func RegistrationPageHandler(w http.ResponseWriter, r *http.Request) {
 func LoginPageHandler(w http.ResponseWriter, r *http.Request) {
 	_, err := getToken(r, &jwt.MapClaims{})
 	if err == ErrNoToken || err == ErrInvalidToken {
-		tmpl, err := template.ParseFiles("../html_templates/html/login.html")
+		tmpl, err := template.ParseFiles("../../html_templates/html/login.html")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -883,9 +883,9 @@ func (a *Application) RunServer() error {
 
 	mux.HandleFunc("/", pathHandler)
 
-	mux.Handle("/css/", http.StripPrefix("/css", http.FileServer(http.Dir("../html_templates/css"))))
-	mux.Handle("/js/", http.StripPrefix("/js", http.FileServer(http.Dir("../html_templates/js"))))
-	mux.Handle("/icons/", http.StripPrefix("/icons", http.FileServer(http.Dir("../html_templates/icons"))))
+	mux.Handle("/css/", http.StripPrefix("/css", http.FileServer(http.Dir("../../html_templates/css"))))
+	mux.Handle("/js/", http.StripPrefix("/js", http.FileServer(http.Dir("../../html_templates/js"))))
+	mux.Handle("/icons/", http.StripPrefix("/icons", http.FileServer(http.Dir("../../html_templates/icons"))))
 
 	log.Println("Starting server on", calc.Port)
 	err := http.ListenAndServe(calc.Port, mux)
